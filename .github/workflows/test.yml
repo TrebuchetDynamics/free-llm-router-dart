@@ -5,16 +5,32 @@ on:
   pull_request:
 
 jobs:
-  go-test:
+  dart-test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup Go
-        uses: actions/setup-go@v5
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
         with:
-          go-version: '1.26.1'
+          sdk: stable
+      - name: Dependencies
+        run: dart pub get
+      - name: Format
+        run: dart format --set-exit-if-changed bin example lib test
+      - name: Analyze
+        run: dart analyze
       - name: Test
-        run: go test ./...
-      - name: Vet
-        run: go vet ./...
+        run: dart test
+      - name: CLI smoke
+        run: dart run gollmfree list
+      - name: Executable metadata smoke
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+          export PUB_CACHE="$tmp/pub-cache"
+          dart pub global activate --source path .
+          export PATH="$PUB_CACHE/bin:$PATH"
+          gollmfree list | tee "$tmp/list.txt"
+          grep -q pollinationsai "$tmp/list.txt"

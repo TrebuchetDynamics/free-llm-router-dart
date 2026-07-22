@@ -1,18 +1,10 @@
-# Built CLI binary
-/gollmfree
-
 # Upstream research notes (not committed per THIRD_PARTY_NOTICES.md policy)
 .upstream/
 
-# Go build and test artifacts
-*.exe
-*.dll
-*.so
-*.dylib
-*.a
-*.test
-*.out
-/vendor/
+# Dart build and package artifacts
+.dart_tool/
+build/
+/pubspec.lock
 
 # Coverage and profiling
 coverage.out

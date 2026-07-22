@@ -1,127 +1,116 @@
 # gollmfree
 
-> Status: M0–M6 complete / pre-v0.1.0. Core library, PollinationsAI provider, selector/health/fallback, three additional provider stubs (Chatai/Yqcloud/WeWordle), and CLI are implemented and tested. gormes-agent integration is live. M7 release hardening is next.
+`gollmfree` is a Dart package and CLI for routing chat-completion requests to free/no-auth LLM providers. It is structured so Flutter apps such as `../navivox-app` can import the core API with a local path dependency.
 
-`gollmfree` is a pure Go library and CLI for routing chat-completion requests to anonymous/free LLM providers without API keys, sign-up, browser automation, Docker, a server process, or extra infrastructure.
+## Add to a Flutter/Dart app
 
-This project is a partial Go port/reference implementation based on [`xtekky/gpt4free`](https://github.com/xtekky/gpt4free). Provider behavior, model aliases, request shaping, and fallback ideas are studied from upstream before each implementation slice, then adapted into tested Go code.
-
-## Install
-
-```bash
-go get github.com/TrebuchetDynamics/gollmfree
+```yaml
+dependencies:
+  gollmfree:
+    path: ../gollmfree
 ```
 
-```bash
-go install github.com/TrebuchetDynamics/gollmfree/cmd/gollmfree@latest
+Then import the core API:
+
+```dart
+import 'package:gollmfree/gollmfree.dart';
 ```
 
-## Go quick start
+The core library has no `dart:io` import, so it is safe for Flutter web compilation. I/O backed providers are exported separately:
 
-```go
-import (
-    "context"
-    "fmt"
+```dart
+import 'package:gollmfree/providers.dart'; // dart:io targets only
+```
 
-    "github.com/TrebuchetDynamics/gollmfree"
-    "github.com/TrebuchetDynamics/gollmfree/providers"
-)
+## Dart quick start
 
-func main() {
-    poll := providers.NewPollinationsAI()
-    registry, _ := gollmfree.NewRegistry(gollmfree.ProviderInfo{
-        Name:            poll.Name(),
-        Provider:        poll,
-        SupportedModels: poll.SupportedModels(),
-        DefaultPriority: 1,
-    })
-    client := gollmfree.NewClient(
-        gollmfree.WithRegistry(registry),
-        gollmfree.WithTimeout(30 * time.Second),
-        gollmfree.WithMaxRetries(0),
-    )
-    resp, err := client.ChatCompletion(context.Background(), gollmfree.ChatRequest{
-        Model:    "auto",
-        Messages: []gollmfree.Message{{Role: "user", Content: "Hello"}},
-    })
-    if err != nil {
-        panic(err)
-    }
-    fmt.Println(resp.Choices[0].Message.Content)
+```dart
+import 'package:gollmfree/gollmfree.dart';
+import 'package:gollmfree/providers.dart';
+
+Future<void> main() async {
+  final pollinations = PollinationsAI();
+  final registry = Registry([
+    ProviderInfo(
+      name: pollinations.name,
+      provider: pollinations,
+      supportedModels: pollinations.supportedModels,
+      defaultPriority: 1,
+    ),
+  ]);
+  final client = GollmfreeClient(registry: registry);
+
+  final response = await client.chatCompletion(
+    const ChatRequest(
+      messages: [Message(role: 'user', content: 'Hello')],
+    ),
+  );
+
+  print(response.choices.first.message.content);
 }
 ```
 
-## CLI quick start
+For a mobile/desktop/server default client with all ported providers:
+
+```dart
+import 'package:gollmfree/providers.dart';
+
+final client = defaultClient();
+```
+
+## CLI
 
 ```bash
-# Send a message
-gollmfree chat "what is 2+2?"
-
-# Stream output
-gollmfree chat --stream "explain Go interfaces"
-
-# List registered providers and health
-gollmfree list
-
-# Show model aliases and provider coverage
-gollmfree models
+dart run gollmfree chat "what is 2+2?"
+dart run gollmfree chat --stream "write one short line"
+dart run gollmfree chat --model pollinationsai/openai-fast "one sentence"
+dart run gollmfree list
+dart run gollmfree models
 ```
+
+Optional local CLI activation from this checkout:
+
+```bash
+dart pub global activate --source path .
+gollmfree list
+```
+
+If Dart's pub-cache bin directory is not on your `PATH`, use `dart pub global run gollmfree list`. Global activation snapshots the checkout, so re-run activation after changing it.
+
+## Package layout
+
+- `lib/gollmfree.dart` — platform-neutral core API: client, types, registry, selector, health, errors. Model strings may be aliases such as `auto`/`gpt-4.1-nano` or provider-qualified routes such as `pollinationsai/openai-fast`.
+- `lib/providers.dart` — `dart:io` provider implementations and default registry/client helpers.
+- `bin/gollmfree.dart` — Dart CLI.
+- `example/` — minimal Dart completion and streaming examples.
+- `test/` — Dart package tests covering importability, registry routing, fallback, streaming, CLI/default registry, provider request shaping, and real free-provider e2e.
 
 ## Provider status
 
-| Provider | Status | Notes |
+| Provider | Dart status | Notes |
 | --- | --- | --- |
-| PollinationsAI | **active** | No-auth OpenAI-shaped endpoint. Rate limit: 1 concurrent anonymous request per IP queue. Default model `openai-fast`. Live smoke test: `GOLLMFREE_POLLINATIONS_LIVE=1 go test -tags=integration ./providers -run TestPollinationsAILiveSmoke`. |
-| Chatai | **inactive** | Code implemented (`providers/chatai.go`), `httptest` suite passes. Live endpoint `chatai.ren` DNS SERVFAIL as of 2026-06-21. Re-activate when a working endpoint is confirmed. |
-| Yqcloud | **inactive** | Code implemented (`providers/yqcloud.go`), `httptest` suite passes. `chat9.yqcloud.top` resolves but returns 405 on all POST paths as of 2026-06-21. |
-| WeWordle | **inactive** | Code implemented (`providers/wewordle.go`), `httptest` suite passes. `wewordle.org/gptapi/v1/en/trial` returns 404 as of 2026-06-21. |
-| DeepAI | postponed | Absent from upstream `gpt4free` at commit `798d8586`. |
-| You.com | postponed | `needs_auth = True`, requires cookies/browser; out of no-auth scope. |
-| LambdaChat | postponed | Upstream `working = False`, multi-step cookie/form flow. |
+| PollinationsAI | live/default | No-auth OpenAI-shaped endpoint via `dart:io`; covered by real e2e. |
+| WeWordle | live/default | No-auth SSE endpoint via `llmproxy.org`; covered by real e2e. |
+| GptFree | live/default | No-auth Firebase-anonymous flow plus SSE result endpoint; covered by real e2e. |
+| Chatai | legacy adapter | Endpoint DNS failed in real e2e; not in default registry. |
+| Yqcloud | legacy adapter | Current endpoint rejected this runner IP in real e2e; not in default registry. |
 
-Upstream reference: <https://github.com/xtekky/gpt4free> at commit `798d8586b180cd8e6fc4b2b2a6a0c8a410de22ca`.
-
-## Wiring multiple providers
-
-```go
-poll := providers.NewPollinationsAI()
-chatai := providers.NewChatai()   // inactive live endpoint — will fail over
-registry, _ := gollmfree.NewRegistry(
-    gollmfree.ProviderInfo{Name: poll.Name(),   Provider: poll,   SupportedModels: poll.SupportedModels(),   DefaultPriority: 1},
-    gollmfree.ProviderInfo{Name: chatai.Name(), Provider: chatai, SupportedModels: chatai.SupportedModels(), DefaultPriority: 2},
-)
-client := gollmfree.NewClient(
-    gollmfree.WithRegistry(registry),
-    gollmfree.WithMaxRetries(0), // fail fast; selector ranks healthy providers first
-)
-```
-
-The selector ranks providers by consecutive failures and cooldown state. Providers that return errors are deprioritised automatically; after `maxConsecutiveFailures` they enter a 5-minute cooldown window.
-
-## Testing policy
-
-Normal tests use `httptest` and must not depend on live providers. Live smoke tests require an explicit opt-in:
+## Validation
 
 ```bash
-# All tests (no network)
-go test ./...
-
-# PollinationsAI live smoke
-GOLLMFREE_POLLINATIONS_LIVE=1 go test -tags=integration ./providers -run TestPollinationsAILiveSmoke
+dart pub get
+dart format --set-exit-if-changed bin example lib test
+dart analyze
+dart test  # includes real e2e for all exported providers: live defaults answer; legacy Chatai/Yqcloud are probed unavailable
+dart run gollmfree list
 ```
 
 ## Privacy and provider caveats
 
 Prompts are sent to third-party anonymous providers that this project does not control. Do not send secrets, credentials, private data, or sensitive production information. Provider labels are treated as provider claims, not guarantees about the actual underlying model.
 
-`gollmfree` does not collect credentials, require account creation, run a local daemon, or log prompt contents by default.
+The default Dart client tries each provider once before sequential fallback; `raceMode` may contact multiple providers concurrently and uses one attempt per raced provider. Pass `maxRetries` to `defaultClient()` only if extra per-provider anonymous traffic is acceptable.
 
 ## Upstream reference
 
-- Repository: <https://github.com/xtekky/gpt4free>
-- Baseline commit: `798d8586b180cd8e6fc4b2b2a6a0c8a410de22ca`
-- License: upstream is GNU GPL v3.0. Attribution and no-vendoring policy: [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
-
-## Project plan
-
-[`GOLLMFREE-PRD.md`](GOLLMFREE-PRD.md) is the master project file. It tracks architecture, roadmap, TDD evidence, blockers, decisions, and the v0.1.0 definition of done.
+This project studies provider behavior from [`xtekky/gpt4free`](https://github.com/xtekky/gpt4free) at commit `798d8586b180cd8e6fc4b2b2a6a0c8a410de22ca`. The Dart router also studies ideas from [`decolua/9router`](https://github.com/decolua/9router), including provider-qualified model routing. Upstream license and attribution notes remain in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
