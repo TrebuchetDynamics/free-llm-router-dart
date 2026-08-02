@@ -1,4 +1,4 @@
-import 'package:gollmfree/gollmfree.dart';
+import 'package:free_llm_router/free_llm_router.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -15,7 +15,7 @@ void main() {
           defaultPriority: 2,
         ),
       ]);
-      final client = GollmfreeClient(registry: registry, maxRetries: 0);
+      final client = FreeLlmRouterClient(registry: registry, maxRetries: 0);
 
       final response = await client.chatCompletion(
         const ChatRequest(
@@ -32,12 +32,20 @@ void main() {
         'succeeding',
       ]);
       expect(client.health().first.failures, 1);
+      expect(
+        client.degradationRegistry.getStatus('failing')?.level,
+        DegradationLevel.failed,
+      );
+      expect(
+        client.degradationRegistry.getStatus('succeeding')?.level,
+        DegradationLevel.healthy,
+      );
     },
   );
 
   test('client stream emits provider-labelled chunks', () async {
     final provider = _FakeProvider('streamer', text: 'chunk');
-    final client = GollmfreeClient(
+    final client = FreeLlmRouterClient(
       registry: Registry([
         ProviderInfo(name: provider.name, provider: provider),
       ]),
@@ -55,10 +63,60 @@ void main() {
     expect(chunks.single.provider, 'streamer');
   });
 
+  test('client completion respects the configured fallback policy', () async {
+    final first = _FakeProvider('first', text: 'first');
+    final second = _FakeProvider('second', text: 'second');
+    final policy = FallbackPolicy()
+      ..register('auto', const [FallbackEntry(provider: 'second')]);
+    final client = FreeLlmRouterClient(
+      registry: Registry([
+        ProviderInfo(name: first.name, provider: first, defaultPriority: 1),
+        ProviderInfo(name: second.name, provider: second, defaultPriority: 2),
+      ]),
+      fallbackPolicy: policy,
+    );
+
+    final response = await client.chatCompletion(
+      const ChatRequest(
+        messages: [Message(role: 'user', content: 'hello')],
+      ),
+    );
+
+    expect(response.provider, 'second');
+    expect(response.choices.single.message.content, 'second');
+    expect(first.completeCalls, 0);
+  });
+
+  test('client stream respects the configured fallback policy', () async {
+    final first = _FakeProvider('first', text: 'first');
+    final second = _FakeProvider('second', text: 'second');
+    final policy = FallbackPolicy()
+      ..register('auto', const [FallbackEntry(provider: 'second')]);
+    final client = FreeLlmRouterClient(
+      registry: Registry([
+        ProviderInfo(name: first.name, provider: first, defaultPriority: 1),
+        ProviderInfo(name: second.name, provider: second, defaultPriority: 2),
+      ]),
+      fallbackPolicy: policy,
+    );
+
+    final chunks = await client
+        .chatCompletionStream(
+          const ChatRequest(
+            messages: [Message(role: 'user', content: 'hello')],
+          ),
+        )
+        .toList();
+
+    expect(chunks.single.provider, 'second');
+    expect(chunks.single.content, 'second');
+    expect(first.streamCalls, 0);
+  });
+
   test('provider-qualified models route only to that provider', () async {
     final first = _RequestAwareProvider('first', text: 'wrong');
     final second = _RequestAwareProvider('second', text: 'right');
-    final client = GollmfreeClient(
+    final client = FreeLlmRouterClient(
       registry: Registry([
         ProviderInfo(name: first.name, provider: first, defaultPriority: 1),
         ProviderInfo(name: second.name, provider: second, defaultPriority: 2),
@@ -82,7 +140,7 @@ void main() {
 
   test('provider-qualified stream passes upstream model', () async {
     final provider = _RequestAwareProvider('streamer', text: 'chunk');
-    final client = GollmfreeClient(
+    final client = FreeLlmRouterClient(
       registry: Registry([
         ProviderInfo(name: provider.name, provider: provider),
       ]),
@@ -105,7 +163,7 @@ void main() {
   test('maxRetries zero attempts a failing provider once', () async {
     final failing = _FakeProvider('failing', error: StateError('offline'));
     final succeeding = _FakeProvider('succeeding', text: 'ok');
-    final client = GollmfreeClient(
+    final client = FreeLlmRouterClient(
       registry: _fallbackRegistry(failing, succeeding),
       maxRetries: 0,
     );
@@ -123,7 +181,7 @@ void main() {
   test('maxRetries controls per-provider retry count', () async {
     final failing = _FakeProvider('failing', error: StateError('offline'));
     final succeeding = _FakeProvider('succeeding', text: 'ok');
-    final client = GollmfreeClient(
+    final client = FreeLlmRouterClient(
       registry: _fallbackRegistry(failing, succeeding),
       maxRetries: 1,
     );
@@ -141,7 +199,7 @@ void main() {
   test('negative maxRetries is treated as zero retries', () async {
     final failing = _FakeProvider('failing', error: StateError('offline'));
     final succeeding = _FakeProvider('succeeding', text: 'ok');
-    final client = GollmfreeClient(
+    final client = FreeLlmRouterClient(
       registry: _fallbackRegistry(failing, succeeding),
       maxRetries: -1,
     );
@@ -159,7 +217,7 @@ void main() {
   test('maxRetries is capped to avoid accidental retry storms', () async {
     final failing = _FakeProvider('failing', error: StateError('offline'));
     final succeeding = _FakeProvider('succeeding', text: 'ok');
-    final client = GollmfreeClient(
+    final client = FreeLlmRouterClient(
       registry: _fallbackRegistry(failing, succeeding),
       maxRetries: 99,
     );
@@ -213,6 +271,7 @@ class _FakeProvider implements Provider {
   final String text;
   final Object? error;
   var completeCalls = 0;
+  var streamCalls = 0;
 
   @override
   List<String> get supportedModels => const ['auto'];
@@ -234,6 +293,7 @@ class _FakeProvider implements Provider {
 
   @override
   Stream<String> stream(List<Message> messages) {
+    streamCalls++;
     final error = this.error;
     if (error != null) throw error;
     return Stream.value(text);

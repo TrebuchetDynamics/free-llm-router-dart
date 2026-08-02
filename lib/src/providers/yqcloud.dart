@@ -39,7 +39,7 @@ class Yqcloud implements Provider {
     request.write(
       jsonEncode({
         'prompt': yqcloudBuildPrompt(messages),
-        'userId': 'gollmfree',
+        'userId': 'free_llm_router',
         'network': true,
         'system': '',
         'withGPT': false,

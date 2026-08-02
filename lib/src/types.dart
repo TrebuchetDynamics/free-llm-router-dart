@@ -148,7 +148,7 @@ class Choice {
   };
 }
 
-/// Text fragment returned by [GollmfreeClient.chatCompletionStream].
+/// Text fragment returned by [FreeLlmRouterClient.chatCompletionStream].
 class StreamChunk {
   const StreamChunk({required this.content, this.provider, this.model});
 

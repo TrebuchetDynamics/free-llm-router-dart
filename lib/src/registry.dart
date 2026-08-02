@@ -12,11 +12,11 @@ class Registry {
     for (final info in infos) {
       final name = info.name.trim();
       if (name.isEmpty) {
-        throw ArgumentError('gollmfree: provider name is required');
+        throw ArgumentError('free_llm_router: provider name is required');
       }
       final key = normalizeRegistryKey(name);
       if (byName.containsKey(key)) {
-        throw ArgumentError('gollmfree: duplicate provider name "$name"');
+        throw ArgumentError('free_llm_router: duplicate provider name "$name"');
       }
 
       final stored = info.copyWith(

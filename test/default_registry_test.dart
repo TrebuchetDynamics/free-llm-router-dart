@@ -1,4 +1,4 @@
-import 'package:gollmfree/providers.dart';
+import 'package:free_llm_router/providers.dart';
 import 'package:test/test.dart';
 
 void main() {

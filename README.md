@@ -1,99 +1,130 @@
-# gollmfree
+<p align="center">
+  <img src="./assets/readme/hero.svg" width="100%" alt="Free LLM Router — free LLM routing for Dart and Flutter">
+</p>
 
-`gollmfree` is a Dart package and CLI for routing chat-completion requests to free/no-auth LLM providers. It is structured so Flutter apps such as `../navivox-app` can import the core API with a local path dependency.
+# Free LLM Router for Dart
 
-## Add to a Flutter/Dart app
-
-```yaml
-dependencies:
-  gollmfree:
-    path: ../gollmfree
-```
-
-Then import the core API:
-
-```dart
-import 'package:gollmfree/gollmfree.dart';
-```
-
-The core library has no `dart:io` import, so it is safe for Flutter web compilation. I/O backed providers are exported separately:
-
-```dart
-import 'package:gollmfree/providers.dart'; // dart:io targets only
-```
-
-## Dart quick start
-
-```dart
-import 'package:gollmfree/gollmfree.dart';
-import 'package:gollmfree/providers.dart';
-
-Future<void> main() async {
-  final pollinations = PollinationsAI();
-  final registry = Registry([
-    ProviderInfo(
-      name: pollinations.name,
-      provider: pollinations,
-      supportedModels: pollinations.supportedModels,
-      defaultPriority: 1,
-    ),
-  ]);
-  final client = GollmfreeClient(registry: registry);
-
-  final response = await client.chatCompletion(
-    const ChatRequest(
-      messages: [Message(role: 'user', content: 'Hello')],
-    ),
-  );
-
-  print(response.choices.first.message.content);
-}
-```
-
-For a mobile/desktop/server default client with all ported providers:
-
-```dart
-import 'package:gollmfree/providers.dart';
-
-final client = defaultClient();
-```
-
-## CLI
-
-```bash
-dart run gollmfree chat "what is 2+2?"
-dart run gollmfree chat --stream "write one short line"
-dart run gollmfree chat --model pollinationsai/openai-fast "one sentence"
-dart run gollmfree list
-dart run gollmfree models
-```
-
-Optional local CLI activation from this checkout:
-
-```bash
-dart pub global activate --source path .
-gollmfree list
-```
-
-If Dart's pub-cache bin directory is not on your `PATH`, use `dart pub global run gollmfree list`. Global activation snapshots the checkout, so re-run activation after changing it.
-
-## Package layout
-
-- `lib/gollmfree.dart` — platform-neutral core API: client, types, registry, selector, health, errors. Model strings may be aliases such as `auto`/`gpt-4.1-nano` or provider-qualified routes such as `pollinationsai/openai-fast`.
-- `lib/providers.dart` — `dart:io` provider implementations and default registry/client helpers.
-- `bin/gollmfree.dart` — Dart CLI.
-- `example/` — minimal Dart completion and streaming examples.
-- `test/` — Dart package tests covering importability, registry routing, fallback, streaming, CLI/default registry, provider request shaping, and real free-provider e2e.
+Route chat-completion requests to free, no-auth LLM providers. No API keys, no accounts, no setup — just send a message and get a response.
 
 ## Provider status
 
-| Provider | Dart status | Notes |
-| --- | --- | --- |
-| PollinationsAI | live/default | No-auth OpenAI-shaped endpoint via `dart:io`; covered by real e2e. |
-| WeWordle | live/default | No-auth SSE endpoint via `llmproxy.org`; covered by real e2e. |
-| GptFree | live/default | No-auth Firebase-anonymous flow plus SSE result endpoint; covered by real e2e. |
-| Chatai | legacy adapter | Endpoint DNS failed in real e2e; not in default registry. |
-| Yqcloud | legacy adapter | Current endpoint rejected this runner IP in real e2e; not in default registry. |
+| Provider           | Status | Endpoint                      |
+| ------------------ | ------ | ----------------------------- |
+| **PollinationsAI** | live   | `text.pollinations.ai/openai` |
+| **WeWordle**       | live   | `llmproxy.org`                |
+| **GptFree**        | live   | Firebase-anonymous flow       |
+| Chatai             | legacy | Endpoint DNS failed           |
+| Yqcloud            | legacy | Endpoint rejected runner IP   |
+
+Prompts are sent to third-party anonymous providers. Do not send secrets or sensitive data.
+
+## Quick start
+
+**Install:**
+
+```bash
+dart pub add free_llm_router
+```
+
+**CLI:**
+
+```bash
+dart run free_llm_router chat "what is 2+2?"
+dart run free_llm_router chat --stream "write one short line"
+dart run free_llm_router list
+dart run free_llm_router models
+```
+
+**Dart API:**
+
+```dart
+import 'package:free_llm_router/free_llm_router.dart';
+import 'package:free_llm_router/providers.dart';
+
+final client = defaultClient();
+final response = await client.chatCompletion(
+  const ChatRequest(
+    messages: [Message(role: 'user', content: 'Hello')],
+  ),
+);
+print(response.choices.first.message.content);
+```
+
+The core library (`free_llm_router.dart`) has no `dart:io` import, so it is safe for Flutter web. I/O-backed providers are exported separately from `providers.dart`.
+
+## How it works
+
+### Routing strategies
+
+Choose how providers are selected:
+
+| Strategy     | Behavior                                                      |
+| ------------ | ------------------------------------------------------------- |
+| `priority`   | Try providers in registration order (default)                 |
+| `weighted`   | Random selection weighted by provider weight                  |
+| `roundRobin` | Cycle through providers in order                              |
+| `random`     | Uniform random pick                                           |
+| `leastUsed`  | Pick the provider with fewest recorded uses                   |
+| `lkgp`       | Sticky to the last successful provider (Last-Known-Good Path) |
+
+```dart
+final client = FreeLlmRouterClient(
+  strategyOptions: const StrategyOptions(
+    strategy: RoutingStrategy.weighted,
+    weights: {'pollinationsai': 2.0, 'wewordle': 1.0},
+  ),
+);
+```
+
+### Fallback policies
+
+Define explicit per-model fallback chains:
+
+```dart
+final policy = FallbackPolicy();
+policy.register('gpt-4o', [
+  FallbackEntry(provider: 'wewordle', priority: 0),
+  FallbackEntry(provider: 'pollinationsai', priority: 1),
+]);
+
+final client = FreeLlmRouterClient(fallbackPolicy: policy);
+```
+
+### Graceful degradation
+
+The client tracks provider health and degradation status:
+
+1. **Healthy** — provider responding normally
+2. **Degraded** — a fallback path is active
+3. **Failed** — a provider is currently unavailable
+4. **Safe default** — both primary and fallback paths failed
+
+Health tracking includes success/failure counts, latency trends, and automatic cooldown after consecutive failures.
+
+### Model routing
+
+Model strings can be plain (`auto`, `gpt-4o`) or provider-qualified (`pollinationsai/openai-fast`) to force a specific provider.
+
+## Package layout
+
+```
+lib/
+  free_llm_router.dart  # Platform-neutral core: client, types, registry, strategy, health, errors
+  providers.dart        # dart:io providers and default registry (mobile/desktop/server/CLI only)
+  src/
+    client.dart           # Multi-strategy client with degradation support
+    routing_strategy.dart # Priority, weighted, round-robin, random, least-used, LKGP
+    degradation.dart      # Graceful degradation framework
+    fallback_policy.dart  # Per-model fallback chain configuration
+    health.dart           # Provider health tracking with cooldown
+    registry.dart         # Provider registry and model alias resolution
+    selector.dart         # Legacy priority-based selector
+bin/
+  free_llm_router.dart  # CLI
+example/
+  basic.dart              # Completion example
+  streaming.dart          # Streaming example
+```
 
 ## Validation
 
@@ -101,16 +132,16 @@ If Dart's pub-cache bin directory is not on your `PATH`, use `dart pub global ru
 dart pub get
 dart format --set-exit-if-changed bin example lib test
 dart analyze
-dart test  # includes real e2e for all exported providers: live defaults answer; legacy Chatai/Yqcloud are probed unavailable
-dart run gollmfree list
+dart test
+dart run free_llm_router list
 ```
 
-## Privacy and provider caveats
-
-Prompts are sent to third-party anonymous providers that this project does not control. Do not send secrets, credentials, private data, or sensitive production information. Provider labels are treated as provider claims, not guarantees about the actual underlying model.
-
-The default Dart client tries each provider once before sequential fallback; `raceMode` may contact multiple providers concurrently and uses one attempt per raced provider. Pass `maxRetries` to `defaultClient()` only if extra per-provider anonymous traffic is acceptable.
+Tests cover importability, registry routing, fallback, streaming, CLI, provider request shaping, and real e2e for all exported providers.
 
 ## Upstream reference
 
-This project studies provider behavior from [`xtekky/gpt4free`](https://github.com/xtekky/gpt4free) at commit `798d8586b180cd8e6fc4b2b2a6a0c8a410de22ca`. The Dart router also studies ideas from [`decolua/9router`](https://github.com/decolua/9router), including provider-qualified model routing. Upstream license and attribution notes remain in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+Provider behavior was studied from [`xtekky/gpt4free`](https://github.com/xtekky/gpt4free). Routing, fallback, and degradation ideas were adapted from [`diegosouzapw/OmniRoute`](https://github.com/diegosouzapw/OmniRoute) and [`decolua/9router`](https://github.com/decolua/9router). Attribution and the intentionally omitted upstream features are documented in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+
+## License
+
+See repository for license details.

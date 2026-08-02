@@ -21,12 +21,12 @@ Registry defaultRegistry() {
 ///
 /// [maxRetries] is per provider in sequential mode: `0` means no retry
 /// after the first attempt. Race mode starts one attempt per raced provider.
-GollmfreeClient defaultClient({
+FreeLlmRouterClient defaultClient({
   Duration perAttemptTimeout = const Duration(seconds: 60),
   bool raceMode = false,
   int maxRetries = 0,
 }) {
-  return GollmfreeClient(
+  return FreeLlmRouterClient(
     registry: defaultRegistry(),
     perAttemptTimeout: perAttemptTimeout,
     maxRetries: maxRetries,

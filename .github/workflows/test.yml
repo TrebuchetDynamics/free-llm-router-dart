@@ -23,7 +23,7 @@ jobs:
       - name: Test
         run: dart test
       - name: CLI smoke
-        run: dart run gollmfree list
+        run: dart run free_llm_router list
       - name: Executable metadata smoke
         run: |
           set -euo pipefail
@@ -32,5 +32,5 @@ jobs:
           export PUB_CACHE="$tmp/pub-cache"
           dart pub global activate --source path .
           export PATH="$PUB_CACHE/bin:$PATH"
-          gollmfree list | tee "$tmp/list.txt"
+          free_llm_router list | tee "$tmp/list.txt"
           grep -q pollinationsai "$tmp/list.txt"

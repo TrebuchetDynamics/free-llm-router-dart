@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:gollmfree/gollmfree.dart';
-import 'package:gollmfree/providers.dart';
+import 'package:free_llm_router/free_llm_router.dart';
+import 'package:free_llm_router/providers.dart';
 
 Future<void> main() async {
   final client = defaultClient();

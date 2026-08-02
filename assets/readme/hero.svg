@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="1200" height="360" viewBox="0 0 1200 360"
+     role="img" aria-labelledby="title desc">
+  <title id="title">free_llm_router — free LLM routing for Dart</title>
+  <desc id="desc">A Dart package that routes chat completions to free, no-auth LLM providers with automatic fallback.</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a0c10"/>
+      <stop offset="100%" stop-color="#111318"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="360" rx="20" fill="url(#bg)"/>
+
+  <!-- Left: title block -->
+  <g id="title-block" transform="translate(64 56)">
+    <!-- Category -->
+    <text x="0" y="0" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
+          font-size="15" fill="#6b7280" font-weight="500" letter-spacing="1.5">
+      DART PACKAGE
+    </text>
+
+    <!-- Name -->
+    <text x="0" y="56" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
+          font-size="52" fill="#f1f5f9" font-weight="700" letter-spacing="-1">
+      free_llm_router
+    </text>
+
+    <!-- Tagline -->
+    <text x="0" y="100" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
+          font-size="20" fill="#94a3b8" font-weight="400">
+      Free LLM routing for Dart &amp; Flutter
+    </text>
+
+    <!-- Key points -->
+    <g transform="translate(0 136)">
+      <circle cx="6" cy="6" r="3" fill="#4ecdc4"/>
+      <text x="18" y="10" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
+            font-size="15" fill="#cbd5e1">No API keys required</text>
+
+      <circle cx="6" cy="34" r="3" fill="#4ecdc4"/>
+      <text x="18" y="38" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
+            font-size="15" fill="#cbd5e1">Automatic provider fallback</text>
+
+      <circle cx="6" cy="62" r="3" fill="#4ecdc4"/>
+      <text x="18" y="66" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
+            font-size="15" fill="#cbd5e1">Flutter web compatible</text>
+    </g>
+  </g>
+
+  <!-- Right: routing diagram -->
+  <g id="routing-diagram" transform="translate(680 40)">
+    <!-- Request box -->
+    <rect x="0" y="0" width="440" height="52" rx="8" fill="#1e2028" stroke="#2a2d36" stroke-width="1"/>
+    <text x="16" y="32" font-family="ui-monospace, SFMono-Regular, Menlo, monospace"
+          font-size="14" fill="#4ecdc4" font-weight="600">$</text>
+    <text x="32" y="32" font-family="ui-monospace, SFMono-Regular, Menlo, monospace"
+          font-size="14" fill="#e2e8f0">free_llm_router chat "hello"</text>
+
+    <!-- Routing arrow -->
+    <path d="M220 52 L220 80" stroke="#4ecdc4" stroke-width="2" fill="none" stroke-dasharray="4 3"/>
+    <polygon points="215,78 225,78 220,86" fill="#4ecdc4"/>
+
+    <!-- Provider 1 - primary -->
+    <g transform="translate(0 96)">
+      <rect x="0" y="0" width="440" height="56" rx="8" fill="#13151c" stroke="#4ecdc4" stroke-width="1.5"/>
+      <circle cx="20" cy="28" r="6" fill="#4ecdc4"/>
+      <text x="36" y="24" font-family="ui-monospace, SFMono-Regular, Menlo, monospace"
+            font-size="13" fill="#94a3b8">POLLINATIONS</text>
+      <text x="36" y="42" font-family="ui-monospace, SFMono-Regular, Menlo, monospace"
+            font-size="13" fill="#4ecdc4">openai-fast</text>
+      <text x="380" y="32" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
+            font-size="12" fill="#4ecdc4" font-weight="600">✓</text>
+    </g>
+
+    <!-- Fallback arrow -->
+    <path d="M220 152 L220 176" stroke="#374151" stroke-width="1.5" fill="none" stroke-dasharray="3 3"/>
+
+    <!-- Provider 2 - fallback -->
+    <g transform="translate(0 176)">
+      <rect x="0" y="0" width="440" height="56" rx="8" fill="#13151c" stroke="#2a2d36" stroke-width="1"/>
+      <circle cx="20" cy="28" r="6" fill="#6b7280"/>
+      <text x="36" y="24" font-family="ui-monospace, SFMono-Regular, Menlo, monospace"
+            font-size="13" fill="#6b7280">WEWORDLE</text>
+      <text x="36" y="42" font-family="ui-monospace, SFMono-Regular, Menlo, monospace"
+            font-size="13" fill="#6b7280">gpt-4o</text>
+    </g>
+
+    <!-- Fallback arrow -->
+    <path d="M220 232 L220 256" stroke="#374151" stroke-width="1.5" fill="none" stroke-dasharray="3 3"/>
+
+    <!-- Provider 3 - fallback -->
+    <g transform="translate(0 256)">
+      <rect x="0" y="0" width="440" height="56" rx="8" fill="#13151c" stroke="#2a2d36" stroke-width="1"/>
+      <circle cx="20" cy="28" r="6" fill="#6b7280"/>
+      <text x="36" y="24" font-family="ui-monospace, SFMono-Regular, Menlo, monospace"
+            font-size="13" fill="#6b7280">GPTFREE</text>
+      <text x="36" y="42" font-family="ui-monospace, SFMono-Regular, Menlo, monospace"
+            font-size="13" fill="#6b7280">gptfree</text>
+    </g>
+
+    <!-- "fallback" label -->
+    <text x="240" y="170" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
+          font-size="11" fill="#4b5563" letter-spacing="0.5">FALLBACK</text>
+  </g>
+
+  <!-- Bottom: metadata -->
+  <g transform="translate(64 316)">
+    <text x="0" y="0" font-family="ui-monospace, SFMono-Regular, Menlo, monospace"
+          font-size="12" fill="#4b5563">dart pub add free_llm_router</text>
+    <text x="340" y="0" font-family="ui-monospace, SFMono-Regular, Menlo, monospace"
+          font-size="12" fill="#4b5563">v0.1.0</text>
+  </g>
+</svg>

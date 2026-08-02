@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:gollmfree/gollmfree.dart';
-import 'package:gollmfree/providers.dart';
+import 'package:free_llm_router/free_llm_router.dart';
+import 'package:free_llm_router/providers.dart';
 import 'package:test/test.dart';
 
 void main() {

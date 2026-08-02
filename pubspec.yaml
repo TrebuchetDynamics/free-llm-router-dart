@@ -1,10 +1,10 @@
-name: gollmfree
+name: free_llm_router
 description: Dart package for routing chat completions to free/no-auth LLM providers.
 version: 0.1.0
 publish_to: none
 
 executables:
-  gollmfree: gollmfree
+  free_llm_router: free_llm_router
 
 environment:
   sdk: ^3.10.0

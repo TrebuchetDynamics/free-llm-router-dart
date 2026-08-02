@@ -27,7 +27,7 @@ Port providers as hand-written, source-shaped Dart adapters.
 
 For current providers:
 
-- Export PollinationsAI, WeWordle, GptFree, Chatai, and Yqcloud from `package:gollmfree/providers.dart`.
+- Export PollinationsAI, WeWordle, GptFree, Chatai, and Yqcloud from `package:free_llm_router/providers.dart`.
 - Keep only live free providers in `defaultRegistry()`.
 - Keep local request/parse tests for adapter behavior.
 - Keep real e2e tests for every default provider.

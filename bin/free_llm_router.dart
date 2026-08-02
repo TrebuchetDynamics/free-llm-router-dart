@@ -1,17 +1,17 @@
 import 'dart:convert';
 import 'dart:io' as io;
 
-import 'package:gollmfree/gollmfree.dart';
-import 'package:gollmfree/providers.dart';
+import 'package:free_llm_router/free_llm_router.dart';
+import 'package:free_llm_router/providers.dart';
 
-const _usageText = '''gollmfree <command> [flags] [args]
+const _usageText = '''free_llm_router <command> [flags] [args]
 
 Commands:
   chat    Send a message and print the reply
   list    Print registered providers and health summary
   models  Print model aliases and provider coverage
 
-Run 'gollmfree <command> -help' for per-command flags.
+Run 'free_llm_router <command> -help' for per-command flags.
 ''';
 
 Future<void> main(List<String> args) async {
@@ -23,7 +23,7 @@ Future<int> run(
   List<String> args, {
   StringSink? stdout,
   StringSink? stderr,
-  GollmfreeClient Function({Duration perAttemptTimeout, bool raceMode})?
+  FreeLlmRouterClient Function({Duration perAttemptTimeout, bool raceMode})?
   clientFactory,
 }) async {
   final out = stdout ?? io.stdout;
@@ -45,7 +45,9 @@ Future<int> run(
     case 'models':
       return _cmdModels(args.skip(1).toList(), stdout: out, stderr: err);
     default:
-      err.write('gollmfree: unknown command "${args.first}"\n\n$_usageText');
+      err.write(
+        'free_llm_router: unknown command "${args.first}"\n\n$_usageText',
+      );
       return 2;
   }
 }
@@ -54,7 +56,7 @@ Future<int> _cmdChat(
   List<String> args, {
   required StringSink stdout,
   required StringSink stderr,
-  GollmfreeClient Function({Duration perAttemptTimeout, bool raceMode})?
+  FreeLlmRouterClient Function({Duration perAttemptTimeout, bool raceMode})?
   clientFactory,
 }) async {
   var model = 'auto';
@@ -67,7 +69,7 @@ Future<int> _cmdChat(
     final arg = args[index];
     if (arg == '-help' || arg == '--help') {
       stderr.writeln(
-        'Usage: gollmfree chat [-model auto] [-timeout 60s] [-race] [-stream] <prompt>',
+        'Usage: free_llm_router chat [-model auto] [-timeout 60s] [-race] [-stream] <prompt>',
       );
       return 2;
     } else if (arg == '-model' || arg == '--model') {
@@ -90,7 +92,7 @@ Future<int> _cmdChat(
   }
 
   if (promptParts.isEmpty) {
-    stderr.writeln('gollmfree chat: prompt argument required');
+    stderr.writeln('free_llm_router chat: prompt argument required');
     return 2;
   }
 
@@ -121,7 +123,7 @@ Future<int> _cmdChat(
     }
     return 0;
   } catch (error) {
-    stderr.writeln('gollmfree: $error');
+    stderr.writeln('free_llm_router: $error');
     return 1;
   }
 }
@@ -167,7 +169,7 @@ Future<int> _cmdModels(
 }
 
 int _flagError(StringSink stderr, String message) {
-  stderr.writeln('gollmfree: $message');
+  stderr.writeln('free_llm_router: $message');
   return 2;
 }
 

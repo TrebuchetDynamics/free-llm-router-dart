@@ -1,7 +1,7 @@
-import 'package:gollmfree/gollmfree.dart';
+import 'package:free_llm_router/free_llm_router.dart';
 import 'package:test/test.dart';
 
-import '../bin/gollmfree.dart' as cli;
+import '../bin/free_llm_router.dart' as cli;
 
 void main() {
   test('chat --model provider/model routes through CLI to provider', () async {
@@ -53,15 +53,15 @@ void main() {
 
     expect(code, 1);
     expect(out.toString(), isEmpty);
-    expect(err.toString(), contains('gollmfree:'));
+    expect(err.toString(), contains('free_llm_router:'));
     expect(err.toString(), contains('offline'));
   });
 }
 
-GollmfreeClient Function({Duration perAttemptTimeout, bool raceMode})
+FreeLlmRouterClient Function({Duration perAttemptTimeout, bool raceMode})
 _clientFactory(Provider provider) {
   return ({perAttemptTimeout = const Duration(seconds: 60), raceMode = false}) {
-    return GollmfreeClient(
+    return FreeLlmRouterClient(
       registry: Registry([
         ProviderInfo(name: provider.name, provider: provider),
       ]),

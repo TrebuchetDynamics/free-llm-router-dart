@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:gollmfree/gollmfree.dart';
-import 'package:gollmfree/providers.dart';
+import 'package:free_llm_router/free_llm_router.dart';
+import 'package:free_llm_router/providers.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -107,7 +107,7 @@ Future<void> _expectCliUnavailable(String model, String provider) async {
 Future<ProcessResult> _runCli(String model, {bool stream = false}) {
   return Process.run(Platform.resolvedExecutable, [
     'run',
-    'gollmfree',
+    'free_llm_router',
     'chat',
     if (stream) '--stream',
     '--model',

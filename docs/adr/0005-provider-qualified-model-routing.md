@@ -12,7 +12,7 @@ The Dart client now accepts model strings in `provider/model` form, inspired by 
 
 9Router resolves model strings such as `alias/model` by splitting the provider alias from the upstream model, resolving the alias to a provider ID, and sending the upstream model to the selected provider (`.upstream/9router/open-sse/services/model.js` at commit `7f436e2792be4fa5a4d1c4d6b8e9bc85eaaa6a3d`). Its chat core then writes the resolved upstream model into the provider request (`.upstream/9router/open-sse/handlers/chatCore.js`).
 
-Before this change, `gollmfree` could route by provider name or model alias, but a Dart request such as `pollinationsai/openai-fast` had no registry candidates and provider adapters did not receive the full `ChatRequest` metadata.
+Before this change, `free_llm_router` could route by provider name or model alias, but a Dart request such as `pollinationsai/openai-fast` had no registry candidates and provider adapters did not receive the full `ChatRequest` metadata.
 
 ## Decision
 

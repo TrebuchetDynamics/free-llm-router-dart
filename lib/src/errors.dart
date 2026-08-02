@@ -22,7 +22,7 @@ class CombinedException implements Exception {
 
   @override
   String toString() {
-    if (attempts.isEmpty) return 'gollmfree: no provider attempts';
-    return 'gollmfree: all provider attempts failed: ${attempts.join('; ')}';
+    if (attempts.isEmpty) return 'free_llm_router: no provider attempts';
+    return 'free_llm_router: all provider attempts failed: ${attempts.join('; ')}';
   }
 }

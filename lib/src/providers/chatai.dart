@@ -40,7 +40,7 @@ class Chatai implements Provider {
     request.headers.set(HttpHeaders.acceptHeader, 'text/event-stream');
     request.write(
       jsonEncode({
-        'machineId': 'gollmfree',
+        'machineId': 'free_llm_router',
         'msg': messages.map((message) => message.toJson()).toList(),
         'token': _token,
         'type': 1,

@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:gollmfree/gollmfree.dart';
-import 'package:gollmfree/providers.dart';
+import 'package:free_llm_router/free_llm_router.dart';
+import 'package:free_llm_router/providers.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -35,7 +35,7 @@ void main() {
       await serverDone;
 
       expect(seen['prompt'], 'second');
-      expect(seen['userId'], 'gollmfree');
+      expect(seen['userId'], 'free_llm_router');
       expect(seen['network'], isTrue);
       expect(response.provider, yqcloudName);
       expect(response.choices.single.message.content, 'hellofrom yqcloud');
